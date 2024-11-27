@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Minimal UI Kit</title>
+  </head>
+
+  <body>
+    <div id="chat-container"></div>
+    <script type="text/javascript">
+      var ChatAPI = ChatAPI || {};
+      (function (t) {
+        t.loaded = false;
+
+        function loadScript(url) {
+          var script = document.createElement('script');
+          var firstScript = document.getElementsByTagName('script')[0];
+          script.type = 'text/javascript';
+          script.async = true;
+
+          script.src = url + t.site_id + '&licenseId=' + t.license_id;
+          script.onload = function () {
+            t.loaded = true;
+          };
+          firstScript.parentNode.insertBefore(script, firstScript);
+        }
+
+        t.chat_buttons = t.chat_buttons || [];
+
+        t.site_id = '6';
+        t.license_id = '164df994-4077-493f-8f45-98c2365b786a';
+        t.main_code_plan = t.license_id;
+
+        t.chat_buttons.push({ code_plan: t.license_id, div_id: 'chat-button-' + t.license_id });
+
+        loadScript('http://172.16.201.60:8001/api/v1/saas-admin/get-chat-bot-script?siteId=');
+
+        setTimeout(function () {
+          if (!t.loaded) {
+            loadScript('http://172.16.201.60:8001/api/v1/saas-admin/get-chat-bot-script?siteId=');
+          }
+        }, 5000);
+      })(ChatAPI || {});
+    </script>
+    <!-- <div id="chat-container"></div>
+    <script type="text/javascript">
+      var ChatAPI = ChatAPI || {};
+      (function (t) {
+        t.loaded = false;
+        function loadScript(url) {
+          var script = document.createElement('script');
+          var firstScript = document.getElementsByTagName('script')[0];
+          script.type = 'text/javascript';
+          script.async = true;
+          script.src = url + t.site_id + '&licenseId=' + t.license_id;
+          script.onload = function () {
+            t.loaded = true;
+          };
+          firstScript.parentNode.insertBefore(script, firstScript);
+        }
+        t.chat_buttons = t.chat_buttons || [];
+        t.site_id = '4';
+        t.license_id = '2a68f34f-a167-4efd-b1a9-b432519ce9eb';
+        t.main_code_plan = t.license_id;
+        t.chat_buttons.push({ code_plan: t.license_id, div_id: 'chat-button-' + t.license_id });
+        loadScript(
+          'https://api-nowchat.abark.com.pk/api/v1/saas-admin/get-chat-bot-script?siteId='
+        );
+        setTimeout(function () {
+          if (!t.loaded) {
+            loadScript(
+              'https://api-nowchat.abark.com.pk/api/v1/saas-admin/get-chat-bot-script?siteId='
+            );
+          }
+        }, 5000);
+      })(ChatAPI || {});
+    </script> -->
+    <!-- <script>
+      // ============== Constants ==============
+      const CHAT_IFRAME_SRC = 'http://172.16.201.131:4173/';
+      const GEOLOCATION_API = 'https://geolocation-db.com/json/';
+      const COOKIE_PATH = '/';
+      const COOKIE_EXPIRY_SESSION = 365 * 24 * 60 * 60 * 1000; // 1 year
+      const COOKIE_EXPIRY_VISITOR = 1 * 60 * 60 * 1000; // 1 hour
+      const COOKIE_EXPIRY_TICKET = 1 * 60 * 60 * 1000; // 1 hour
+      const SITE_ID = 57;
+      const LICENSE_ID = '3b4c1b64-e23b-4319-a16e-8fad6f9261d0';
+
+      // ============== Chat Customization settings ==============
+
+      let chatBotSettings = {
+        color: '#5D5FEF',
+        font: 'Roboto',
+        headerText: 'Chat Bot',
+        welcomeMessage: '',
+        chatBotHead: 'center',
+        buttonIcon: `https://img.icons8.com/ios/452/chat.png`,
+      };
+      // ============== Variables ==============
+      let popupWindow = null;
+      let isDragging = false;
+      let offsetX = 0;
+      let offsetY = 0;
+      let newLeft = 0;
+      let newTop = 0;
+      let animationFrameId = null;
+      let targetWindow = null;
+      let userInfo = {};
+      let openPopup = false;
+
+      // ============== Create Elements ==============
+      const holderDiv = createHolderDiv();
+      const dragableHeader = createDraggableHeader();
+      const iframe = createIframe();
+      const button = createButton();
+
+      // ============== Append Elements ==============
+      document.body.appendChild(holderDiv);
+      holderDiv.appendChild(dragableHeader);
+      holderDiv.appendChild(iframe);
+      holderDiv.appendChild(button);
+
+      // ============== Event Listeners ==============
+      window.onload = async () => {
+        const response = await fetch(GEOLOCATION_API);
+        const data = await response.json();
+        userInfo = {
+          ...data,
+          currentPath: window.location.href,
+          siteId: SITE_ID,
+          licenseId: LICENSE_ID,
+          meta_data: {
+            session_id: getCookie('u_sess_now'),
+            visitor_session_id: getCookie('u_vis_now'),
+            ticket_session_id: getCookie('u_ticket_now'),
+          },
+        };
+      };
+      iframe.onload = handleIframeLoad;
+      window.addEventListener('message', handleMessage);
+      dragableHeader.addEventListener('mousedown', startDragging);
+      dragableHeader.addEventListener('mouseup', stopDragging);
+      document.addEventListener('mouseleave', stopDragging);
+      document.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('popstate', sendNavigationData);
+      button.addEventListener('click', () => {
+        iframe.contentWindow.postMessage(
+          {
+            type: 'open-close',
+            payload: userInfo,
+          },
+          CHAT_IFRAME_SRC
+        );
+      });
+      // Overwrite pushState and replaceState to detect manual navigation
+      const originalPushState = history.pushState;
+      const originalReplaceState = history.replaceState;
+      history.pushState = function () {
+        originalPushState.apply(this, arguments);
+        sendNavigationData();
+      };
+      history.replaceState = function () {
+        originalReplaceState.apply(this, arguments);
+        sendNavigationData();
+      };
+
+      // ============== Functions ==============
+      function createHolderDiv() {
+        const div = document.createElement('div');
+        div.style.cssText = `
+              display: flex;
+              flex-direction: column;
+              justify-content: flex-end;
+              position: absolute;
+              bottom: 10px;
+              right: 10px;
+              width: fit-content;
+              height: fit-content;
+              z-index: 999999;
+              overflow: hidden;
+            `;
+        return div;
+      }
+      function createButton() {
+        const button = document.createElement('button');
+        const icon = document.createElement('img');
+        icon.src = chatBotSettings.buttonIcon;
+        icon.style.cssText = `
+              height: 40px;
+              width: 40px;
+                    `;
+        button.appendChild(icon);
+        button.style.cssText = `
+              margin-left:auto;
+              height: 70px;
+              width: 70px;
+              border-radius: 50%;
+              border: none;
+              cursor: pointer;
+              color: white;
+              background-color: ${chatBotSettings.color};
+              box-shadow: 0 0 0 25px rgba(218, 218, 218, 0);
+            `;
+        return button;
+      }
+
+      function createDraggableHeader() {
+        const div = document.createElement('div');
+        div.style.cssText = `
+              display: none;
+              pointer-events: none;
+              position: absolute;
+              width: 190px;
+              height: 50px;
+              overflow: hidden;
+              top: 2px;
+              left: 11px;
+              cursor: move;
+              z-index: 10000;
+            `;
+        return div;
+      }
+
+      function createIframe() {
+        const iframe = document.createElement('iframe');
+        iframe.id = 'chat-iframe';
+        iframe.style.cssText = `
+              height: 0px;
+              width: 0px;
+              border: none;
+             box-shadow: rgba(0, 0, 0, 0.1) 0px 10px 50px;
+              border-radius: 18px;
+              pointer-events: all;
+            `;
+        iframe.src = CHAT_IFRAME_SRC;
+        return iframe;
+      }
+
+      function handleIframeLoad() {
+        fetch(GEOLOCATION_API)
+          .then((res) => res.json())
+          .then((data) => {
+            const session_id = getCookie('u_sess_now');
+            const visitor_session_id = getCookie('u_vis_now');
+            const ticket_session_id = getCookie('u_ticket_now');
+            iframe.contentWindow.postMessage(
+              {
+                type: 'user-location',
+                payload: {
+                  settings: chatBotSettings,
+                  ...data,
+                  siteId: SITE_ID,
+                  licenseId: LICENSE_ID,
+                  currentPath: window.location.href,
+                  meta_data: {
+                    session_id,
+                    visitor_session_id,
+                    ticket_session_id,
+                  },
+                },
+              },
+              CHAT_IFRAME_SRC
+            );
+          })
+          .catch((error) => console.log('Error fetching geolocation data:', error));
+      }
+      // ------------ handle message in parent window ------------
+      function handleMessage(e) {
+        switch (e.data.type) {
+          case 'open':
+            openChat();
+            break;
+          case 'close':
+            closeChat();
+            break;
+          case 'set-cookie':
+            setSessionCookie(e.data.payload.sessionId);
+            setVisitorCookie(e.data.payload.visitorId);
+            break;
+          case 'set-ticket-cookie':
+            setTicketCookie(e.data.payload.ticketId);
+            break;
+          case 'update-sessions':
+              setVisitorCookie(e.data.payload.visitorId);
+                setTicketCookie(e.data.payload.ticketId);
+              break;
+          case 'open-window':
+            handleWindowPopUP();
+            break;
+        }
+      }
+
+      function openChat() {
+        iframe.style.height = '575px';
+        iframe.style.width = '320px';
+        iframe.style.marginBottom = '20px';
+        dragableHeader.style.pointerEvents = 'all';
+        dragableHeader.style.display = 'block';
+        dragableHeader.style.backgroundColor = 'rgba(0, 0, 0, 0.01)';
+        if (holderDiv.style.inset) {
+          holderDiv.style.inset = `${newTop}px  10px 10px ${newLeft}px`;
+        }
+      }
+
+      function closeChat() {
+        if (holderDiv.style.inset) {
+          holderDiv.style.inset = `${newTop + 580}px  10px 10px ${newLeft + 250}px`;
+        }
+        iframe.style.overflow = 'hidden';
+        iframe.style.marginBottom = '0px';
+        iframe.style.height = '0px';
+        iframe.style.width = '0px';
+        dragableHeader.style.pointerEvents = 'none';
+        dragableHeader.style.backgroundColor = 'transparent';
+      }
+
+      function setSessionCookie(value) {
+        const date = new Date();
+        date.setTime(date.getTime() + COOKIE_EXPIRY_SESSION);
+        document.cookie = `u_sess_now=${value}; expires=${date.toUTCString()}; path=${COOKIE_PATH}`;
+      }
+
+      function setVisitorCookie(value) {
+        const date = new Date();
+        date.setTime(date.getTime() + COOKIE_EXPIRY_VISITOR);
+        document.cookie = `u_vis_now=${value}; expires=${date.toUTCString()}; path=${COOKIE_PATH}`;
+      }
+
+      function setTicketCookie(value) {
+        const date = new Date();
+        date.setTime(date.getTime() + COOKIE_EXPIRY_TICKET);
+        document.cookie = `u_ticket_now=${value}; expires=${date.toUTCString()}; path=${COOKIE_PATH}`;
+      }
+
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+      }
+      function sendUserLocationToPopup() {
+        if (popupWindow && !popupWindow.closed) {
+          const popupIframe = popupWindow.document.getElementById('popup-chat-iframe');
+          if (popupIframe) {
+            fetch(GEOLOCATION_API)
+              .then((res) => res.json())
+              .then((data) => {
+                const session_id = getCookie('u_sess_now');
+                const visitor_session_id = getCookie('u_vis_now');
+                const ticket_session_id = getCookie('u_ticket_now');
+                popupIframe.contentWindow.postMessage(
+                  {
+                    type: 'user-location',
+                    payload: {
+                      ...data,
+                      currentPath: window.location.href,
+                      siteId: SITE_ID,
+                      licenseId: LICENSE_ID,
+                      meta_data: {
+                        session_id,
+                        visitor_session_id,
+                        ticket_session_id,
+                      },
+                    },
+                  },
+                  CHAT_IFRAME_SRC
+                );
+              })
+              .catch((error) => console.log('Error fetching geolocation data:', error));
+          }
+        }
+      }
+      function handleWindowPopUP() {
+        // Check if popup window already exists and is not closed
+        if (popupWindow && !popupWindow.closed) {
+          popupWindow.focus();
+          return;
+        }
+
+        // Open the popup window in the center of the screen
+        const popupWidth = 600;
+        const popupHeight = 400;
+        const left = (window.innerWidth - popupWidth) / 2;
+        const top = (window.innerHeight - popupHeight) / 2;
+
+        popupWindow = window.open(
+          '', // Empty URL, content will be written below
+          'popupWindow',
+          `width=${popupWidth},height=${popupHeight},top=${top},left=${left}`
+        );
+
+        // Write the initial HTML content to the popup window
+        popupWindow.document.write('<html><body></body></html>');
+        popupWindow.document.body.style.margin = '0';
+        popupWindow.document.body.style.overflow = 'hidden';
+
+        // Create an iframe element
+        const popupIframe = popupWindow.document.createElement('iframe');
+        popupIframe.id = 'popup-chat-iframe';
+        popupIframe.src = CHAT_IFRAME_SRC; // Use the same iframe source as the main window
+        popupIframe.style.cssText = `
+          height: 100%;
+          width: 100%;
+          border: none;
+        `;
+
+        // Append the iframe to the popup window's body
+        popupWindow.document.body.appendChild(popupIframe);
+
+        // Ensure that the iframe content loads properly
+        popupIframe.onload = () => {
+          sendUserLocationToPopup(); // Send location data once the iframe is fully loaded
+        };
+
+        // Listen for message events in the popup window
+        popupWindow.addEventListener('message', (event) => {
+          if (event.origin !== CHAT_IFRAME_SRC) return; // Ensure origin matches
+
+          // Handle the received messages
+          switch (event.data.type) {
+            case 'user-location':
+              console.log('Received User Location in Popup:', event.data.payload); // Log received data
+              break;
+            // Add other cases as needed
+          }
+        });
+
+        // Optionally close the popup document to ensure all scripts run
+        popupWindow.document.close();
+      }
+
+      function sendNavigationData() {
+        const navigationData = {
+          type: 'user-navigation',
+          payload: {
+            url: window.location.href,
+            previousUrl: document.referrer,
+          },
+        };
+        if (popupWindow && !popupWindow.closed) {
+          const popupIframe = popupWindow.document.getElementById('popup-chat-iframe');
+          if (popupIframe) targetWindow = popupIframe.contentWindow;
+        } else {
+          targetWindow = iframe.contentWindow;
+        }
+        targetWindow.postMessage(navigationData, CHAT_IFRAME_SRC);
+      }
+
+      function startDragging(e) {
+        isDragging = true;
+        offsetX = e.clientX - holderDiv.offsetLeft;
+        offsetY = e.clientY - holderDiv.offsetTop;
+        dragableHeader.style.width = '90%';
+        dragableHeader.style.height = '95%';
+        document.body.style.userSelect = 'none';
+      }
+
+      function stopDragging() {
+        isDragging = false;
+        dragableHeader.style.width = '200px';
+        dragableHeader.style.height = '30px';
+        document.body.style.userSelect = '';
+      }
+
+      function handleMouseMove(e) {
+        if (isDragging) {
+          newLeft = e.clientX - offsetX;
+          newTop = e.clientY - offsetY;
+          const holderDivWidth = holderDiv.offsetWidth;
+          const holderDivHeight = holderDiv.offsetHeight;
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+          newLeft = Math.max(0, Math.min(newLeft, windowWidth - (holderDivWidth + 20)));
+          newTop = Math.max(0, Math.min(newTop, windowHeight - holderDivHeight));
+          if (!animationFrameId) {
+            animationFrameId = requestAnimationFrame(updatePosition);
+          }
+        }
+      }
+
+      function updatePosition() {
+        holderDiv.style.left = `${newLeft}px`;
+        holderDiv.style.top = `${newTop}px`;
+        animationFrameId = null;
+      }
+    </script> -->
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
