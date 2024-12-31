@@ -31,12 +31,12 @@
         t.main_code_plan = t.license_id;
         t.chat_buttons.push({ code_plan: t.license_id, div_id: 'chat-button-' + t.license_id });
         loadScript(
-          'https://api-nowchat.abark.com.pk/api/v1/saas-admin/get-chat-bot-script?siteId='
+          'https://api-nowchat.abark.com.pk/api/v1/saas-services/generic/get-chat-bot-script?siteId='
         );
         setTimeout(function () {
           if (!t.loaded) {
             loadScript(
-              'https://api-nowchat.abark.com.pk/api/v1/saas-admin/get-chat-bot-script?siteId='
+              'https://api-nowchat.abark.com.pk/api/v1/saas-services/generic/get-chat-bot-script?siteId='
             );
           }
         }, 5000);
